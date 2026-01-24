@@ -1,0 +1,47 @@
+{% extends "base.html" %} {% block title %}เข้าสู่ระบบ - ระบบจัดระเบียบไฟล์{%
+endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-5">
+        <div class="text-center mb-4">
+          <i class="bi bi-person-circle display-1 text-primary opacity-25"></i>
+          <h3 class="fw-bold mt-3">เข้าสู่ระบบ</h3>
+        </div>
+        <form action="/login" method="POST">
+          <div class="mb-3">
+            <label for="username" class="form-label">ชื่อผู้ใช้</label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              name="username"
+              required
+              autofocus
+            />
+          </div>
+          <div class="mb-4">
+            <label for="password" class="form-label">รหัสผ่าน</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+            เข้าสู่ระบบ
+          </button>
+          <div class="text-center">
+            <p class="text-muted small">
+              ยังไม่มีบัญชี?
+              <a href="/register" class="text-decoration-none">สมัครสมาชิก</a>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

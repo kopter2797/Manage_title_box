@@ -1,0 +1,19 @@
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Virtual Environment (ถ้ามี)
+venv/
+env/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Config files (ถ้ามีรหัสผ่านสำคัญ อย่าอัปไฟล์นี้ ให้สร้างเป็น example แทน)
+config.py
+
+# Build artifacts
+build/
+dist/
+*.spec

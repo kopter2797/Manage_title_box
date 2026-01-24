@@ -1,0 +1,261 @@
+{% extends "base.html" %} {% block title %}ผลการค้นหา: "{{ query }}" -
+ระบบจัดระเบียบไฟล์{% endblock %} {% block content %}
+<div class="row">
+  <div class="col-md-12 mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-4 gap-3">
+      <div class="d-flex align-items-center w-100 w-md-auto mb-2 mb-md-0">
+        <a href="/" class="btn btn-outline-secondary me-3">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+          <h4 class="fw-bold mb-0">ผลการค้นหาสำหรับ "{{ query }}"</h4>
+          <p class="text-muted small mb-0" id="searchCount">พบทั้งหมด {{ files|length }} ไฟล์</p>
+        </div>
+      </div>
+
+      <div class="ms-md-auto ms-0 w-100 w-md-auto d-flex align-items-center justify-content-between justify-content-md-end gap-2">
+        <div class="dropdown d-inline-block">
+          <button class="btn btn-outline-secondary dropdown-toggle btn-sm" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-sort-down"></i> เรียงตาม
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+            <li><a class="dropdown-item {% if current_sort == 'relevance' %}active{% endif %}" href="{{ url_for('search_files', q=query, sort='relevance') }}">ความเกี่ยวข้อง (ค่าเริ่มต้น)</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item {% if current_sort == 'name_asc' %}active{% endif %}" href="{{ url_for('search_files', q=query, sort='name_asc') }}">ชื่อ (A-Z)</a></li>
+            <li><a class="dropdown-item {% if current_sort == 'name_desc' %}active{% endif %}" href="{{ url_for('search_files', q=query, sort='name_desc') }}">ชื่อ (Z-A)</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item {% if current_sort == 'date_desc' %}active{% endif %}" href="{{ url_for('search_files', q=query, sort='date_desc') }}">วันที่ (ใหม่สุด)</a></li>
+            <li><a class="dropdown-item {% if current_sort == 'date_asc' %}active{% endif %}" href="{{ url_for('search_files', q=query, sort='date_asc') }}">วันที่ (เก่าสุด)</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item {% if current_sort == 'size_desc' %}active{% endif %}" href="{{ url_for('search_files', q=query, sort='size_desc') }}">ขนาด (ใหญ่สุด)</a></li>
+            <li><a class="dropdown-item {% if current_sort == 'size_asc' %}active{% endif %}" href="{{ url_for('search_files', q=query, sort='size_asc') }}">ขนาด (เล็กสุด)</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle text-nowrap" id="filesTable">
+            <thead class="bg-light">
+              <tr>
+                <th class="ps-4">ชื่อไฟล์</th>
+                <th>ที่อยู่ไฟล์</th>
+                <th class="text-nowrap">หมวดหมู่</th>
+                <th class="text-nowrap">ขนาด</th>
+                <th class="text-nowrap">วันที่ย้าย</th>
+                <th class="text-end pe-4 text-nowrap">การกระทำ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for file in files %}
+              <tr id="row-{{ file.id }}">
+                <td class="ps-4">
+                  <div class="d-flex align-items-center">
+                    <i
+                      class="bi bi-file-earmark-text fs-4 text-primary me-3"
+                    ></i>
+                    <span class="fw-medium">{{ file.filename }}</span>
+                  </div>
+                </td>
+                <td title="{{ file.destination_path }}">
+                  <span class="text-muted small"
+                    >{{ file.destination_path|truncate(30, True) }}</span
+                  >
+                </td>
+                <td class="text-nowrap">
+                  <span class="badge bg-secondary"
+                    >{{ file.category_name }}</span
+                  >
+                </td>
+                <td class="text-nowrap">
+                  <span class="badge bg-light text-dark border"
+                    >{{ "%.2f"|format(file.file_size_kb) }} KB</span
+                  >
+                </td>
+                <td class="text-nowrap">
+                  <small class="text-muted">{{ file.moved_at }}</small>
+                </td>
+                <td class="text-end pe-4">
+                  <div class="btn-group" role="group">
+                    <form action="/open_file" method="POST" class="d-inline">
+                      <input
+                        type="hidden"
+                        name="file_path"
+                        value="{{ file.destination_path }}"
+                      />
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-light text-success"
+                        title="เปิดไฟล์"
+                      >
+                        <i class="bi bi-box-arrow-up-right"></i>
+                      </button>
+                    </form>
+                    <a
+                      href="{{ url_for('download_file', log_id=file.id) }}"
+                      class="btn btn-sm btn-light text-primary ms-1"
+                      title="ดาวน์โหลด"
+                    >
+                      <i class="bi bi-download"></i>
+                    </a>
+                    <button
+                      onclick="openRenameModal('{{ file.id }}', '{{ file.filename }}')"
+                      class="btn btn-sm btn-light text-warning ms-1"
+                      title="เปลี่ยนชื่อ"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button
+                      onclick="deleteFile('{{ file.id }}')"
+                      class="btn btn-sm btn-light text-danger ms-1"
+                      title="ลบไฟล์"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center py-5 text-muted">
+                  <i class="bi bi-search display-4 mb-3 d-block opacity-25"></i>
+                  ไม่พบไฟล์ที่ตรงกับคำค้นหา
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- Rename Modal -->
+<div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="renameModalLabel">เปลี่ยนชื่อไฟล์</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="renameForm">
+          <input type="hidden" id="renameLogId" name="log_id">
+          <div class="mb-3">
+            <label for="newFilename" class="form-label">ชื่อไฟล์ใหม่</label>
+            <input type="text" class="form-control" id="newFilename" name="new_name" required>
+            <div class="form-text">นามสกุลไฟล์จะถูกคงเดิมหากคุณไม่ได้ระบุ</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" onclick="submitRename()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  function deleteFile(logId) {
+    if (!logId) {
+      showMessageModal("ข้อผิดพลาด", "รหัสไฟล์ไม่ถูกต้อง", "error");
+      return;
+    }
+    
+    showConfirmModal("คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้ถาวร? การกระทำนี้ไม่สามารถย้อนกลับได้", function() {
+      fetch("/delete_file/" + logId, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          if (data.success) {
+            // Remove row from table
+            var row = document.getElementById("row-" + logId);
+            if (row) {
+              row.style.transition = "all 0.3s";
+              row.style.opacity = "0";
+              setTimeout(() => row.remove(), 300);
+            }
+            // Update search count
+            const countEl = document.getElementById('searchCount');
+            if (countEl) {
+                const currentText = countEl.textContent.trim();
+                const match = currentText.match(/(\d+)/);
+                if (match) {
+                    let count = parseInt(match[0]);
+                    count = Math.max(0, count - 1);
+                    countEl.textContent = `พบทั้งหมด ${count} ไฟล์`;
+                }
+            }
+
+          } else {
+            showMessageModal("ข้อผิดพลาด", "เกิดข้อผิดพลาดในการลบไฟล์: " + (data.message || "Unknown error"), "error");
+          }
+        })
+        .catch(function (error) {
+          console.error("Error:", error);
+          showMessageModal("ข้อผิดพลาด", "เกิดข้อผิดพลาดขณะลบไฟล์", "error");
+        });
+    });
+  }
+
+  function openRenameModal(logId, currentName) {
+    document.getElementById('renameLogId').value = logId;
+    document.getElementById('newFilename').value = currentName;
+    var renameModal = new bootstrap.Modal(document.getElementById('renameModal'));
+    renameModal.show();
+  }
+
+  function submitRename() {
+    const logId = document.getElementById('renameLogId').value;
+    const newName = document.getElementById('newFilename').value;
+    
+    if (!newName) {
+        showMessageModal("แจ้งเตือน", "กรุณาระบุชื่อไฟล์", "warning");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('log_id', logId);
+    formData.append('new_name', newName);
+
+    fetch("/rename_file", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update table row info without reload
+            const row = document.getElementById("row-" + logId);
+            if (row) {
+                const nameSpan = row.querySelector('.fw-medium');
+                if (nameSpan) nameSpan.textContent = data.new_name;
+            }
+            // Close modal
+            var modalEl = document.getElementById('renameModal');
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            modal.hide();
+            
+            showMessageModal("สำเร็จ", "เปลี่ยนชื่อเรียบร้อยแล้ว", "success");
+        } else {
+            showMessageModal("ข้อผิดพลาด", "เกิดข้อผิดพลาด: " + (data.message || "Unknown error"), "error");
+        }
+    })
+    .catch(function (error) {
+        console.error("Error:", error);
+        showMessageModal("ข้อผิดพลาด", "เกิดข้อผิดพลาดขณะเปลี่ยนชื่อไฟล์", "error");
+    });
+  }
+</script>
+{% endblock %}

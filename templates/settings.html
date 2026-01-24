@@ -1,0 +1,180 @@
+{% extends "base.html" %} {% block title %}ตั้งค่า - ระบบจัดระเบียบไฟล์{%
+endblock %} {% block content %}
+<div class="row g-4">
+  <!-- Add Rule Card -->
+  <div class="col-lg-4 mb-4">
+    <div class="card h-100 fade-in">
+      <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+        <h5 class="mb-0 fw-bold">
+          <i class="bi bi-plus-circle me-2 text-primary"></i>เพิ่มการตั้งค่า
+        </h5>
+      </div>
+      <div class="card-body">
+        <form action="/settings/add" method="POST">
+          <div class="mb-3">
+            <label for="category_name" class="form-label">ชื่อหมวดหมู่</label>
+            <input
+              type="text"
+              class="form-control"
+              id="category_name"
+              name="category_name"
+              placeholder="เช่น รูปภาพ"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="target_folder_path" class="form-label"
+              >ที่อยู่โฟลเดอร์ปลายทาง</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="target_folder_path"
+              name="target_folder_path"
+              placeholder="C:\Users\..."
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label for="allowed_extensions" class="form-label"
+              >นามสกุลไฟล์ (คั่นด้วย ,)</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="allowed_extensions"
+              name="allowed_extensions"
+              placeholder="jpg, png, gif"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary w-100 shadow-sm">
+            <i class="bi bi-save me-2"></i>เพิ่มการตั้งค่าล่าสุด
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Existing Rules List -->
+  <div class="col-lg-8">
+    <div class="card fade-in" style="animation-delay: 0.1s">
+      <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+        <h5 class="mb-0 fw-bold">
+          <i class="bi bi-list-check me-2 text-primary"></i>การตั้งค่าที่มีอยู่
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive scrollbar-top-container">
+          <table class="table table-hover align-middle text-nowrap">
+            <thead class="bg-light">
+              <tr>
+                <th class="ps-4 text-center" style="width: 20%">หมวดหมู่</th>
+                <th class="text-center" style="width: 35%">ที่อยู่ปลายทาง</th>
+                <th class="text-center" style="width: 30%">นามสกุลไฟล์</th>
+                <th class="text-center pe-4" style="width: 15%">ฟีเจอร์</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rule in rules %}
+              <tr>
+                <td class="ps-4 fw-medium">{{ rule.category_name }}</td>
+                <td title="{{ rule.target_folder_path }}">
+                  <span class="text-muted small"
+                    >{{ rule.target_folder_path|truncate(30, True) }}</span
+                  >
+                </td>
+                <td>
+                  {% for ext in rule.allowed_extensions.split(',') %}
+                  <span class="badge bg-light text-secondary border me-1"
+                    >{{ ext.strip() }}</span
+                  >
+                  {% endfor %}
+                </td>
+                <td class="text-end pe-4">
+                  <form
+                    action="/settings/delete/{{ rule.id }}"
+                    method="POST"
+                    id="deleteRuleForm-{{ rule.id }}"
+                  >
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-light text-danger"
+                      title="ลบกฎ"
+                      onclick="confirmDeleteRule('{{ rule.id }}')"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-5">
+                  <div class="mb-4">
+                    <i
+                      class="bi bi-clipboard-x display-4 text-muted opacity-25"
+                    ></i>
+                    <p class="text-muted mt-3">ยังไม่มีกฎที่ใช้งานอยู่</p>
+                  </div>
+
+                  <div
+                    class="card bg-light border-0 mx-auto"
+                    style="max-width: 400px"
+                  >
+                    <div class="card-body">
+                      <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-stars me-2"></i>แนะนำ:
+                        เริ่มต้นอย่างรวดเร็ว
+                      </h6>
+                      <p class="small text-muted mb-3">
+                        เพิ่มกฎพื้นฐานเหล่านี้ได้ในคลิกเดียว:
+                      </p>
+                      <div
+                        class="d-flex flex-wrap justify-content-center gap-2 mb-3"
+                      >
+                        <span class="badge bg-white text-dark border"
+                          >รูปภาพ</span
+                        >
+                        <span class="badge bg-white text-dark border"
+                          >เอกสาร</span
+                        >
+                        <span class="badge bg-white text-dark border"
+                          >วิดีโอ</span
+                        >
+                        <span class="badge bg-white text-dark border"
+                          >เพลง</span
+                        >
+                        <span class="badge bg-white text-dark border"
+                          >ไฟล์บีบอัด</span
+                        >
+                      </div>
+                      <form action="/settings/add_defaults" method="POST">
+                        <button
+                          type="submit"
+                          class="btn btn-primary btn-sm w-100"
+                        >
+                          <i class="bi bi-magic me-2"></i>เพิ่มกฎแนะนำทั้งหมด
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  function confirmDeleteRule(ruleId) {
+    showConfirmModal("คุณแน่ใจหรือไม่ว่าต้องการลบกฎนี้?", function () {
+      document.getElementById("deleteRuleForm-" + ruleId).submit();
+    });
+  }
+</script>
+{% endblock %}

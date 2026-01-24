@@ -1,0 +1,7 @@
+Flask
+pymysql
+flask-login
+werkzeug
+pywebview
+gunicorn
+
